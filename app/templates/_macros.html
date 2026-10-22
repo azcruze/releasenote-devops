@@ -1,0 +1,34 @@
+{% macro version(v) %}<span class="ver">v{{ v }}</span>{% endmacro %}
+{% macro status(s) %}<span class="badge st-{{ s|lower|replace(' ', '-') }}">{{ s }}</span>{% endmacro %}
+{% macro category(c) %}<span class="badge cat">{{ c }}</span>{% endmacro %}
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+{% macro field_error(errors, name) %}{% if errors.get(name) %}<p class="field-error" id="{{ name }}-error">{{ errors[name] }}</p>{% endif %}{% endmacro %}
+{% macro text_input(name, label, form, errors, type="text", required=true, hint="", maxlength=120, mono=false) %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ form.get(name, '') }}" maxlength="{{ maxlength }}"
+         {% if required %}required{% endif %}{% if mono %} class="mono"{% endif %}
+         {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% elif hint %}aria-describedby="{{ name }}-hint"{% endif %}>
+  {% if hint and not errors.get(name) %}<p class="hint" id="{{ name }}-hint">{{ hint }}</p>{% endif %}
+  {{ field_error(errors, name) }}
+</div>
+{% endmacro %}
+{% macro select_input(name, label, options, form, errors) %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }} <span class="req" aria-hidden="true">*</span></label>
+  <select id="{{ name }}" name="{{ name }}" required {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+    {% for o in options %}<option value="{{ o }}" {% if form.get(name) == o %}selected{% endif %}>{{ o }}</option>{% endfor %}
+  </select>
+  {{ field_error(errors, name) }}
+</div>
+{% endmacro %}
+{% macro text_area(name, label, form, errors, hint="", rows=5, maxlength=4000, required=false) %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <textarea id="{{ name }}" name="{{ name }}" rows="{{ rows }}" maxlength="{{ maxlength }}"
+            {% if required %}required{% endif %}
+            {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% elif hint %}aria-describedby="{{ name }}-hint"{% endif %}>{{ form.get(name, '') }}</textarea>
+  {% if hint and not errors.get(name) %}<p class="hint" id="{{ name }}-hint">{{ hint }}</p>{% endif %}
+  {{ field_error(errors, name) }}
+</div>
+{% endmacro %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, version, status with context %}
+{% block title %}Delete v{{ r.version }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Delete this release?</h1></div></div>
+<section class="panel confirm">
+  <p>You are about to permanently delete <strong>{{ version(r.version) }} {{ r.title }}</strong> ({{ status(r.status) }}, {{ r.release_date|pretty_date }}).</p>
+  <p class="muted">This removes its changelog and deployment notes. It cannot be undone.</p>
+  <form method="post" class="form-actions">{{ csrf() }}
+    <button class="btn btn-danger" type="submit">Delete release</button>
+    <a class="btn btn-quiet" href="{{ url_for('main.release_detail', release_id=r.id) }}">Keep release</a></form>
+</section>
+{% endblock %}

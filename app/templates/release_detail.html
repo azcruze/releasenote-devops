@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import version, status, category with context %}
+{% block title %}v{{ r.version }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('main.release_list') }}">Release history</a></p>
+<div class="page-head">
+  <div><h1 class="detail-title">{{ version(r.version) }} {{ r.title }}</h1>
+    <p class="meta-line">{{ status(r.status) }} {{ category(r.category) }}</p></div>
+  {% if can_manage %}<div class="actions">
+    <a class="btn btn-quiet" href="{{ url_for('main.release_edit', release_id=r.id) }}">Edit</a>
+    <a class="btn btn-danger" href="{{ url_for('main.release_delete', release_id=r.id) }}">Delete</a></div>{% endif %}
+</div>
+
+<div class="detail-grid">
+  <div class="stack">
+    <section class="panel" aria-labelledby="description-h"><h2 id="description-h">Release description</h2>
+      <p class="prewrap">{{ r.description }}</p></section>
+    {% for key, heading, empty in [('features','New features','No new features in this release.'),('bug_fixes','Bug fixes','No bug fixes in this release.'),('improvements','Improvements','No improvements in this release.')] %}
+    <section class="panel change change-{{ key }}" aria-labelledby="{{ key }}-h">
+      <h2 id="{{ key }}-h">{{ heading }}</h2>
+      {% set items = r[key]|lines %}
+      {% if items %}<ul class="changes">{% for i in items %}<li>{{ i }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ empty }}</p>{% endif %}
+    </section>
+    {% endfor %}
+    <section class="panel" aria-labelledby="notes-h"><h2 id="notes-h">Deployment notes</h2>
+      {% if r.deployment_notes %}<p class="prewrap">{{ r.deployment_notes }}</p>{% else %}<p class="muted">No deployment notes were recorded.</p>{% endif %}</section>
+  </div>
+  <aside class="panel meta" aria-labelledby="meta-h"><h2 id="meta-h">Release details</h2>
+    <dl>
+      <dt>Version</dt><dd class="mono">{{ r.version }}</dd>
+      <dt>Release date</dt><dd>{{ r.release_date|pretty_date }}</dd>
+      <dt>Status</dt><dd>{{ status(r.status) }}</dd>
+      <dt>Category</dt><dd>{{ r.category }}</dd>
+      <dt>Author</dt><dd>{{ r.author }}</dd>
+      <dt>Recorded</dt><dd>{{ r.created_at }} UTC</dd>
+      <dt>Last updated</dt><dd>{{ r.updated_at }} UTC</dd>
+    </dl></aside>
+</div>
+<nav class="release-nav" aria-label="Neighbouring releases">
+  {% if older %}<a href="{{ url_for('main.release_detail', release_id=older.id) }}"><span class="muted small">Previous release</span><br><strong>v{{ older.version }}</strong> {{ older.title }}</a>{% else %}<span></span>{% endif %}
+  {% if newer %}<a class="right" href="{{ url_for('main.release_detail', release_id=newer.id) }}"><span class="muted small">Next release</span><br><strong>v{{ newer.version }}</strong> {{ newer.title }}</a>{% endif %}
+</nav>
+{% endblock %}

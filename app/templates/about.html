@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>About ReleaseNote</h1><p class="lede">Automated software release management and changelog tracking.</p></div></div>
+<div class="grid-2">
+  <section class="panel"><h2>What it does</h2>
+    <p>ReleaseNote keeps a structured history of software releases: version, status, category, features, fixes, improvements and deployment notes.</p>
+    <p>It is also a working DevOps demonstration. A push to GitHub triggers a Jenkins pipeline that tests the code, deploys it to an Azure Linux virtual machine over SSH, restarts Gunicorn behind Nginx, and confirms the new build through the <a href="{{ url_for('main.health') }}">health endpoint</a>.</p>
+    <p class="muted">Infrastructure is provisioned separately with Terraform.</p></section>
+  <section class="panel"><h2>System information</h2>
+    <dl class="info">{% for k, v in info.items() %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}</dl></section>
+</div>
+{% endblock %}

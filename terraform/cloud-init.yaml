@@ -1,0 +1,11 @@
+#cloud-config
+# First-boot bootstrap: OS packages only. Application deployment is done by Jenkins (deploy/deploy.sh).
+package_update: true
+packages:
+  - nginx
+  - python3-venv
+  - python3-pip
+  - curl
+  - sqlite3
+runcmd:
+  - systemctl enable --now nginx

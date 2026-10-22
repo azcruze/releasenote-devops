@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import version, status, category with context %}
+{% block title %}Release history{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Release history</h1><p class="lede">Every recorded release, newest first by default.</p></div>
+  {% if can_manage %}<a class="btn btn-primary" href="{{ url_for('main.release_create') }}">Create release</a>{% endif %}
+</div>
+<form class="filters" method="get" action="{{ url_for('main.release_list') }}" role="search">
+  <div class="field grow"><label for="q">Search version or title</label>
+    <input id="q" name="q" type="search" value="{{ filters.q }}" placeholder="e.g. 1.2 or security" maxlength="100"></div>
+  <div class="field"><label for="status">Status</label>
+    <select id="status" name="status"><option value="">All statuses</option>
+      {% for s in ['Draft','Scheduled','Released','Rolled Back','Deprecated'] %}<option {% if filters.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="category">Category</label>
+    <select id="category" name="category"><option value="">All categories</option>
+      {% for c in ['Major','Minor','Patch','Hotfix','Security'] %}<option {% if filters.category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="sort">Sort by date</label>
+    <select id="sort" name="sort"><option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest first</option><option value="oldest" {% if filters.sort == 'oldest' %}selected{% endif %}>Oldest first</option></select></div>
+  <div class="filter-actions"><button class="btn btn-primary" type="submit">Apply</button>
+    {% if filtered %}<a class="btn btn-quiet" href="{{ url_for('main.release_list') }}">Reset</a>{% endif %}</div>
+</form>
+
+{% if releases %}
+<p class="muted small result-count">Showing {{ (page - 1) * per_page + 1 }} to {{ (page - 1) * per_page + releases|length }} of {{ total }} release{{ '' if total == 1 else 's' }}</p>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th scope="col">Version</th><th scope="col">Release and summary</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col">Date</th><th scope="col">Author</th></tr></thead>
+  <tbody>
+  {% for r in releases %}
+    <tr><td>{{ version(r.version) }}</td>
+        <td><a class="plain strong" href="{{ url_for('main.release_detail', release_id=r.id) }}">{{ r.title }}</a><br><span class="muted small">{{ r.description }}</span></td>
+        <td>{{ category(r.category) }}</td><td>{{ status(r.status) }}</td>
+        <td class="nowrap">{{ r.release_date|pretty_date }}</td><td>{{ r.author }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if pages > 1 %}
+{% set args = {'q': filters.q, 'status': filters.status, 'category': filters.category, 'sort': filters.sort} %}
+<nav class="pager" aria-label="Pagination">
+  {% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('main.release_list', page=page-1, **args) }}">Previous</a>{% else %}<span class="btn btn-quiet disabled" aria-disabled="true">Previous</span>{% endif %}
+  <span class="muted small">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a class="btn btn-quiet" href="{{ url_for('main.release_list', page=page+1, **args) }}">Next</a>{% else %}<span class="btn btn-quiet disabled" aria-disabled="true">Next</span>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="empty panel">
+  {% if filtered %}<h3>No releases match these filters</h3><p>Try a different search term, or clear the filters.</p><a class="btn btn-quiet" href="{{ url_for('main.release_list') }}">Clear filters</a>
+  {% else %}<h3>No releases recorded</h3><p>Create the first release to start your history.</p>
+    {% if can_manage %}<a class="btn btn-primary" href="{{ url_for('main.release_create') }}">Create release</a>{% endif %}{% endif %}
+</div>
+{% endif %}
+{% endblock %}

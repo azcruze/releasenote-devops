@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_macros.html" import version, status, category with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="welcome-banner" aria-labelledby="welcome-title">
+  <div class="welcome-copy">
+    <span class="welcome-kicker">RELEASE MANAGEMENT</span>
+    <h1 id="welcome-title">Welcome to ReleaseNote</h1>
+    <p>Your software releases, organized in one place.</p>
+    <div class="welcome-actions">
+      {% if can_manage %}<a class="btn btn-primary" href="{{ url_for('main.release_create') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v13M3.5 10h13"/></svg>Create release</a>{% endif %}
+      <a class="btn btn-banner-quiet" href="{{ url_for('main.release_list') }}">View release history</a>
+    </div>
+  </div>
+  <div class="welcome-art" aria-hidden="true">
+    <svg viewBox="0 0 260 150"><circle cx="193" cy="57" r="30" fill="#ffeab1"/><path d="M0 119c35-30 75-24 108-5 30 18 53 11 78-6 25-16 48-16 74 0v42H0z" fill="#ccefe9"/><path d="M0 133c36-18 70-14 104-2 40 15 73 5 104-7 18-7 34-8 52-2v30H0z" fill="#aee3dd"/><path d="M53 61c0-11 9-19 20-19 4-12 15-20 28-20 15 0 26 10 29 23 12 0 22 9 22 21H53z" fill="#fff" opacity=".92"/><path d="M181 103c0-9 7-15 15-15 3-10 12-16 22-16 11 0 20 8 22 18 9 0 16 7 16 16h-75z" fill="#fff" opacity=".83"/></svg>
+  </div>
+  <span class="environment-chip"><span></span>{{ config['APP_ENV'] }}</span>
+</section>
+
+<section class="dashboard-toolbar panel" aria-label="Dashboard filters">
+  <form id="dashboard-filters" class="dashboard-filters" method="get" action="{{ url_for('main.dashboard') }}">
+    <label class="dashboard-search"><span>Search releases</span><span class="search-control"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input type="search" name="q" value="{{ filters.q }}" placeholder="Version or title"></span></label>
+    <label><span>Status</span><select name="status"><option value="">All statuses</option>{% for value in ['Draft','Scheduled','Released','Rolled Back','Deprecated'] %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+    <label><span>Release type</span><select name="category"><option value="">All types</option>{% for value in ['Major','Minor','Patch','Hotfix','Security'] %}<option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+    <label><span>From</span><input type="date" name="start" value="{{ filters.start_date.isoformat() }}"></label>
+    <label><span>To</span><input type="date" name="end" value="{{ filters.end_date.isoformat() }}"></label>
+    <div class="dashboard-filter-actions"><button class="btn btn-primary" type="submit">Apply</button><button class="btn btn-icon" type="button" id="dashboard-refresh" aria-label="Refresh dashboard" title="Refresh dashboard"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 0 0-11-2L3 7"/><path d="M3 3v4h4M4 13a6.5 6.5 0 0 0 11 2l2-2"/><path d="M17 17v-4h-4"/></svg></button></div>
+  </form>
+  <p id="dashboard-feedback" class="dashboard-feedback" role="status" aria-live="polite"></p>
+</section>
+
+<section class="summary dashboard-kpis" aria-label="Release summary">
+  <a class="stat kpi-total" href="{{ url_for('main.release_list') }}"><span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M7 3.75h7l4 4v12.5H7z"/><path d="M14 3.75v4h4M9.5 12h6M9.5 15.5h6"/></svg></span><span class="stat-label">Total releases</span><strong class="stat-value" data-kpi="total">{{ analytics.total }}</strong></a>
+  {% for s, label in [('Released','Released versions'),('Scheduled','Scheduled'),('Draft','Draft'),('Rolled Back','Rolled back'),('Deprecated','Deprecated')] %}
+  <a class="stat kpi-{{ s|lower|replace(' ', '-') }}" href="{{ url_for('main.release_list', status=s) }}" aria-label="{{ s }}: {{ analytics.status_counts[s] }} of {{ analytics.total }}"><span class="stat-label">{{ label }}</span><strong class="stat-value" data-kpi-status="{{ s }}">{{ analytics.status_counts[s] }}</strong><span class="kpi-caption">View {{ s|lower }} releases <span aria-hidden="true">→</span></span></a>
+  {% endfor %}
+</section>
+
+<div class="analytics-grid">
+  <section class="panel chart-panel monthly-panel" aria-labelledby="monthly-title">
+    <div class="widget-heading"><div><h2 id="monthly-title">Monthly release activity</h2><p>Release volume across the selected date range</p></div><span class="widget-mark blue-mark" aria-hidden="true">↗</span></div>
+    <div class="chart-container"><svg id="monthly-chart" class="data-chart line-chart" role="img" aria-label="Monthly release activity chart"></svg><p class="chart-empty" hidden>No release activity in this date range.</p></div>
+  </section>
+  <section class="panel chart-panel status-panel" aria-labelledby="distribution-title">
+    <div class="widget-heading"><div><h2 id="distribution-title">Releases by status</h2><p>Status distribution in the selected view</p></div><span class="widget-mark lavender-mark" aria-hidden="true">◉</span></div>
+    <div class="donut-layout"><div class="donut-wrap"><svg id="status-chart" class="data-chart donut-chart" role="img" aria-label="Release status distribution chart"></svg><div class="donut-center"><strong data-donut-total>{{ analytics.total }}</strong><span>releases</span></div></div><ul class="chart-legend" id="status-legend"></ul></div>
+  </section>
+  <section class="panel chart-panel types-panel" aria-labelledby="types-title">
+    <div class="widget-heading"><div><h2 id="types-title">Release types</h2><p>Major, minor, and patch versions</p></div><span class="widget-mark mint-mark" aria-hidden="true">▥</span></div>
+    <div class="chart-container type-chart-container"><svg id="types-chart" class="data-chart bar-chart" role="img" aria-label="Major, minor, and patch releases chart"></svg><p class="chart-empty" hidden>No release types in this view.</p></div>
+  </section>
+  <section class="panel calendar-panel" aria-labelledby="calendar-title">
+    <div class="widget-heading calendar-heading"><div><h2 id="calendar-title">Release calendar</h2><p>Scheduled delivery dates</p></div><div class="calendar-nav"><button type="button" class="calendar-move" data-month-step="-1" aria-label="Previous month">‹</button><button type="button" class="calendar-move" data-month-step="1" aria-label="Next month">›</button></div></div>
+    <div class="calendar-month" id="calendar-month">{{ analytics.calendar.month_name }}</div>
+    <div class="calendar-grid calendar-weekdays" aria-hidden="true">{% for day in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<span>{{ day }}</span>{% endfor %}</div>
+    <div class="calendar-grid calendar-days" id="calendar-days" role="list" aria-label="Scheduled release dates">
+      {% for blank in range(analytics.calendar.first_weekday) %}<span class="calendar-day is-blank" aria-hidden="true"></span>{% endfor %}
+      {% for day in range(1, analytics.calendar.days_in_month + 1) %}
+      {% set iso_date = '%04d-%02d-%02d'|format(analytics.calendar.year, analytics.calendar.month, day) %}
+      {% set scheduled_on_day = analytics.calendar.scheduled|selectattr('release_date','equalto',iso_date)|list %}
+      <div class="calendar-day{% if scheduled_on_day %} has-release{% endif %}" role="listitem" data-calendar-date="{{ iso_date }}"><span>{{ day }}</span>{% for release in scheduled_on_day %}<a class="calendar-dot" href="{{ url_for('main.release_detail', release_id=release.id) }}" title="v{{ release.version }} — {{ release.title }}" aria-label="v{{ release.version }} {{ release.title }}"></a>{% endfor %}</div>
+      {% endfor %}
+    </div>
+    <p class="calendar-key"><span></span>Scheduled release</p>
+  </section>
+  <section class="panel activity-panel" aria-labelledby="recent-h">
+    <div class="widget-heading"><div><h2 id="recent-h">Recent release activity</h2><p>Latest updates in this date range</p></div><a class="text-link" href="{{ url_for('main.release_list') }}">View history <span aria-hidden="true">→</span></a></div>
+    <div id="recent-releases" class="activity-list">
+      {% for release in analytics.recent %}
+      <a class="activity-item" href="{{ url_for('main.release_detail', release_id=release.id) }}"><span class="activity-version">{{ version(release.version) }}</span><span class="activity-copy"><strong>{{ release.title }}</strong><small>{{ release.release_date|pretty_date }}</small></span>{{ status(release.status) }}</a>
+      {% else %}<p class="widget-empty">{% if analytics.total == 0 %}No releases yet. Record your first release to start the history.{% else %}No releases match the selected filters.{% endif %}</p>{% endfor %}
+    </div>
+  </section>
+  <section class="panel upcoming-panel" aria-labelledby="upcoming-title">
+    <div class="widget-heading"><div><h2 id="upcoming-title">Upcoming releases</h2><p>Next scheduled delivery dates</p></div><a class="text-link" href="{{ url_for('main.release_list', status='Scheduled') }}">Review scheduled <span aria-hidden="true">→</span></a></div>
+    <div id="upcoming-releases" class="upcoming-list">
+      {% for release in analytics.upcoming %}
+      <a class="upcoming-item" href="{{ url_for('main.release_detail', release_id=release.id) }}"><span class="upcoming-date"><strong>{{ release.release_date[8:10] }}</strong><small>{{ release.release_date[5:7] }}</small></span><span class="upcoming-copy"><strong>{{ version(release.version) }} {{ release.title }}</strong><small>{{ release.release_date|pretty_date }}</small></span><span class="upcoming-arrow" aria-hidden="true">↗</span></a>
+      {% else %}<p class="widget-empty">No upcoming scheduled releases.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

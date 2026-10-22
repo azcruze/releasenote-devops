@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Sign in</h1><p class="lede">Management access is limited to maintainers.</p></div></div>
+<section class="panel narrow">
+{% if management_mode == 'protected' %}
+  <form method="post" class="form">{{ csrf() }}<input type="hidden" name="next" value="{{ next }}">
+    <div class="field"><label for="password">Administrator password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Sign in</button></div></form>
+{% elif management_mode == 'read-only' %}
+  <p>This server is read-only because no administrator password is configured. Set <code>ADMIN_PASSWORD_HASH</code> in the server environment file, then restart the service.</p>
+{% else %}
+  <p>Sign-in is not required in this local environment. Set <code>ADMIN_PASSWORD_HASH</code> to enable it.</p>
+{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, text_input, select_input, text_area with context %}
+{% set statuses = ['Draft','Scheduled','Released','Rolled Back','Deprecated'] %}
+{% set categories = ['Major','Minor','Patch','Hotfix','Security'] %}
+{% block title %}{{ 'New release' if mode == 'create' else 'Edit v' ~ r.version }}{% endblock %}
+{% block content %}
+<div class="page-head"><div>
+  <h1>{{ 'Create release' if mode == 'create' else 'Edit release v' ~ r.version }}</h1>
+  <p class="lede">Fields marked * are required. Put one item per line in the change lists.</p></div></div>
+{% if errors %}<div class="error-summary" role="alert"><strong>Please fix {{ errors|length }} field{{ '' if errors|length == 1 else 's' }}:</strong>
+  <ul>{% for name, msg in errors.items() %}<li><a href="#{{ name }}">{{ msg }}</a></li>{% endfor %}</ul></div>{% endif %}
+<form method="post" class="form panel" novalidate>
+  {{ csrf() }}
+  <div class="form-grid">
+    {{ text_input('version', 'Version', form, errors, hint='Semantic version, e.g. 1.4.0', maxlength=40, mono=true) }}
+    {{ text_input('title', 'Release title', form, errors) }}
+    {{ text_area('description', 'Release description', form, errors, hint='Summarize the purpose and impact of this release.', rows=3, maxlength=1000, required=true) }}
+    {{ text_input('release_date', 'Release date', form, errors, type='date') }}
+    {{ select_input('status', 'Status', statuses, form, errors) }}
+    {{ select_input('category', 'Category', categories, form, errors) }}
+    {{ text_input('author', 'Author or maintainer', form, errors, maxlength=80) }}
+  </div>
+  {{ text_area('features', 'New features', form, errors, hint='One feature per line.') }}
+  {{ text_area('bug_fixes', 'Bug fixes', form, errors, hint='One fix per line.') }}
+  {{ text_area('improvements', 'Improvements', form, errors, hint='One improvement per line.') }}
+  {{ text_area('deployment_notes', 'Deployment notes', form, errors, hint='Migration steps, configuration changes, rollback guidance.', rows=4) }}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Create release' if mode == 'create' else 'Save changes' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('main.release_list') if mode == 'create' else url_for('main.release_detail', release_id=r.id) }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

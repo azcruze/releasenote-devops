@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (git-ignored) and edit. Never commit terraform.tfvars.
+
+# subscription_id   = "00000000-0000-0000-0000-000000000000"   # or: export ARM_SUBSCRIPTION_ID=...
+location            = "centralindia"
+project_name        = "releasenote"
+environment         = "dev"
+vm_size             = "Standard_B2s"
+admin_username      = "azureuser"
+ssh_public_key_path = "~/.ssh/releasenote_azure.pub"
+
+# Your public IP (https://ifconfig.me) and the Jenkins server's public IP, each as /32.
+ssh_allowed_cidrs = ["203.0.113.10/32"]
+
+enable_https = false
+# dns_label  = "releasenote-yourname"
