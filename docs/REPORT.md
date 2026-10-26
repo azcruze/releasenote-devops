@@ -1,161 +1,305 @@
----
-title: "ReleaseNote: Automated Software Release Management and Changelog Tracking Using Flask, SQLite, Jenkins, Terraform, and Microsoft Azure"
----
+# ReleaseNote: Automated Software Release Management and Changelog Tracking Using Flask, SQLite, Jenkins, Terraform, and Microsoft Azure
 
-<!-- Convert to PDF: pandoc docs/REPORT.md -o ReleaseNote_Report.pdf --toc  (Mermaid diagrams: render to PNG with mermaid-cli or screenshot from GitHub and insert). Text in [square brackets] must be filled by you. -->
-
-# Title Page
-
-**ReleaseNote: Automated Software Release Management and Changelog Tracking Using Flask, SQLite, Jenkins, Terraform, and Microsoft Azure**
 *Track every release. Automate every deployment.*
 
-| | |
+## Title Page
+
+| Detail | Information |
 |---|---|
 | Course | DevOps (24DC2006) |
 | Class / Semester | B.Tech AIDS / CO, VII Semester |
-| Evaluation | IA-3 (maximum 40 marks) |
-| Course instructors | Mrs. J. Srija, Mrs. Esther Lipni, Mr. Rahul |
-| Submitted by | [Name(s), roll number(s)] |
-| Date | [Submission date] |
-| Repository | [GitHub URL] |
+| Evaluation | IA-3 |
+| Course Instructors | Mrs. J. Srija, Mrs. Esther Lipni, Mr. Rahul |
+| Submitted By | [Enter student name and roll number] |
+| Submission Date | [Enter submission date] |
+| GitHub Repository | https://github.com/azcruze/releasenote-devops |
 
-# 1. Abstract
-ReleaseNote is a Flask web application that keeps a structured, searchable history of software releases. Around it, the project implements an end-to-end DevOps workflow: a push to GitHub triggers a Jenkins pipeline that runs automated tests, packages the application, deploys it over SSH to an Azure Linux virtual machine provisioned by Terraform, restarts the Gunicorn service behind Nginx, and verifies the new build through a public health endpoint. The project demonstrates infrastructure as code, continuous integration, continuous deployment, rollback, and basic security practice on a small, reproducible scale.
+## 1. Abstract
 
-# 2. Problem Statement
-Teams often record releases in scattered documents, so it is hard to see what changed, when, and who shipped it. Manual deployment adds a second problem: copying files to servers by hand is slow, inconsistent and error-prone. A single tool that stores release notes, and a pipeline that removes manual steps from shipping that tool, address both.
+ReleaseNote is a Flask-based web application designed to maintain a structured, searchable history of software releases. It supports release creation, viewing, editing, deletion, filtering, and status tracking. The application is supported by a DevOps workflow using GitHub, GitHub Actions, and Jenkins. GitHub Actions executes the automated Python test suite and uploads a JUnit XML report. Jenkins checks out the source code, validates required project files, packages the source, and generates a SHA-256 checksum.
 
-# 3. Objectives
-1. Build a working release-tracking web application with full create/read/update/delete.
-2. Provision cloud infrastructure from code (Terraform on Azure).
-3. Automate test and deployment with a Jenkins pipeline triggered by GitHub.
-4. Ensure a failing test prevents deployment, and a failing deployment rolls back.
-5. Verify every deployment against the live public endpoint.
-6. Document, test and present the work reproducibly.
+The verified GitHub Actions run completed 78 tests with zero failures and zero errors. The Jenkins `ReleaseNote-CI` pipeline also completed successfully and produced source packaging artifacts. Terraform and Microsoft Azure are included in the project's intended infrastructure and deployment design. However, Azure provisioning, remote deployment, and live health verification have not yet been confirmed. The project therefore demonstrates an implemented application, automated testing, source packaging, and a documented path toward cloud deployment.
 
-# 4. Scope
-**In scope:** one Flask application, SQLite storage, a single Azure Linux VM, Nginx + Gunicorn + systemd, one Jenkins pipeline, local Terraform state, HTTP access.
-**Out of scope:** multi-user accounts, high availability, TLS certificate automation, containerisation/Kubernetes, remote Terraform state (documented as optional), database migrations framework.
+## 2. Problem Statement
 
-# 5. Tools and Technologies
-| Area | Tool | Why chosen |
-|---|---|---|
-| Web framework | Flask 3.0.3 | Small, explicit, easy to explain and test |
-| Database | SQLite (WAL) | No server to run; adequate for one VM and light load |
-| App server / proxy | Gunicorn 22, Nginx | Standard production pairing; Gunicorn is not exposed publicly |
-| Process manager | systemd | Survives SSH disconnect and reboot; auto-restart |
-| Testing | Pytest 8.2.2 | Concise tests, fixtures, JUnit output for Jenkins |
-| Source control | Git, GitHub | Industry standard; push events drive the pipeline |
-| CI/CD | Jenkins declarative pipeline | Required by the course; pipeline-as-code in `Jenkinsfile` |
-| IaC | Terraform + AzureRM ~> 4.0 | Declarative, repeatable, reviewable infrastructure |
-| Cloud | Azure Linux VM (Ubuntu 22.04 LTS) | Required VM-based deployment |
+Software teams need a reliable way to record release versions, changes, fixes, improvements, and deployment notes. When this information is maintained manually across separate documents, searching for a particular release and identifying its changes can become difficult.
 
-# 6. System Requirements
-**Developer machine:** Windows/Linux/macOS, Python 3.10+, Git, Azure CLI, Terraform >= 1.6. **Jenkins machine:** Linux, Java (per Jenkins docs), Python 3 + venv, Git, curl, OpenSSH client. **Azure:** subscription with permission to create resources; VM size such as Standard_B2s (2 vCPU, 4 GiB). **Browser:** any current browser; no internet needed for UI assets.
+Manual software delivery can also involve repetitive, error-prone steps. ReleaseNote addresses release-information management through a centralized web application and supports a more repeatable software delivery process through automated testing and source packaging.
 
-# 7. Proposed Solution
-Application code lives in GitHub. Terraform builds the network and VM once. Jenkins builds, tests and ships each commit; `deploy.sh` on the VM installs it as an immutable numbered release directory, switches a symlink, restarts the service, and rolls back automatically if `/health` fails. Persistent data and secrets live outside the release directories so deployments cannot overwrite them.
+## 3. Objectives
 
-# 8. System Architecture
-See `docs/ARCHITECTURE.md`. Summary: Developer -> GitHub -> Jenkins -> (pytest -> package -> SSH) -> Azure VM [Nginx -> Gunicorn -> Flask -> SQLite]; Terraform independently provisions Azure.
+1. Develop a web application for maintaining software release records.
+2. Implement create, read, update, and delete operations with input validation.
+3. Store release information in a SQLite database.
+4. Maintain source code and version history using Git and GitHub.
+5. Execute automated tests using GitHub Actions.
+6. Configure a Jenkins pipeline for source checkout, project validation, and packaging.
+7. Generate a source archive and SHA-256 checksum as build artifacts.
+8. Document the planned infrastructure provisioning and deployment process using Terraform and Microsoft Azure.
+9. Maintain accurate execution evidence and identify work that remains incomplete.
 
-# 9. Architecture Diagrams
-[Insert rendered Figure A (system architecture) and Figure B (CI/CD pipeline) from `docs/ARCHITECTURE.md`.]
+## 4. Scope
 
-# 10. Application Module Descriptions
+**Implemented and verified scope**
+
+- Flask-based release-tracking application.
+- SQLite-based persistence.
+- Release management and validation features.
+- GitHub repository and version control.
+- GitHub Actions automated test workflow.
+- JUnit XML test report artifact.
+- Jenkins source checkout, environment verification, project-file validation, and packaging.
+- SHA-256 checksum generation for the source archive.
+
+**Planned or not yet verified**
+
+- Terraform-based Azure resource provisioning.
+- Remote application deployment.
+- Nginx and Gunicorn configuration on a deployed VM.
+- Jenkins-driven remote deployment and rollback.
+- Live public health verification after deployment.
+
+## 5. Tools and Technologies
+
+| Technology | Purpose |
+|---|---|
+| Python 3 | Application programming language |
+| Flask 3.0.3 | Web application framework |
+| SQLite | Relational database |
+| Jinja2 | HTML template rendering |
+| Gunicorn 22 | Planned production application server |
+| Nginx | Planned web server and reverse proxy |
+| systemd | Planned Linux service management |
+| Pytest 8.2.2 | Automated testing |
+| Git and GitHub | Source control and repository hosting |
+| GitHub Actions | Automated test execution and report upload |
+| Jenkins | Source validation and packaging pipeline |
+| Terraform | Infrastructure as code for planned Azure provisioning |
+| Microsoft Azure | Intended cloud hosting platform |
+
+## 6. System Requirements
+
+For local development, the project requires Python 3.10 or later, Git, and a modern web browser. The automated testing workflow uses a GitHub-hosted Ubuntu runner with Python 3.12.
+
+Jenkins requires a working Jenkins environment and the command-line tools used by the pipeline, including Git, Bash, and tar.
+
+The planned Azure deployment additionally requires an Azure subscription, Azure CLI, Terraform, SSH credentials, and appropriate permissions to create and manage cloud resources. Azure deployment should only be performed after reviewing the infrastructure configuration and expected costs.
+
+## 7. Proposed Solution
+
+The solution consists of a Flask application and supporting automation workflows.
+
+The application stores release records in SQLite and provides a browser-based interface for release management. Source code is maintained in GitHub. GitHub Actions runs the Python tests when changes are pushed to the `main` branch or when a pull request targets `main`. It also supports manual workflow execution and uploads a JUnit XML test report.
+
+A separate Jenkins pipeline checks out the repository, verifies the execution environment, checks required project files, and creates a compressed source archive with a SHA-256 checksum.
+
+Terraform configuration is included for the intended Azure infrastructure. Remote deployment and health verification remain future execution steps until supported by actual evidence.
+
+## 8. System Architecture
+
+The implemented workflow consists of the following paths:
+
+**Automated testing**
+
+Developer → GitHub → GitHub Actions → Python dependencies → Pytest → JUnit XML report artifact.
+
+**Source packaging**
+
+GitHub repository → Jenkins → Environment verification → Project-file validation → Source archive → SHA-256 checksum → Jenkins artifacts.
+
+**Planned cloud deployment**
+
+Terraform → Azure virtual machine → Nginx → Gunicorn → Flask application → SQLite database.
+
+The testing and packaging paths are separate workflows. The successful Jenkins packaging build does not establish that Jenkins executed the Python tests or deployed the application.
+
+## 9. Application Module Descriptions
+
 | Module | Responsibility |
 |---|---|
-| `app/__init__.py` | Application factory, error pages, security headers, start-up initialisation |
-| `app/routes.py` | Dashboard, history, CRUD, About, `/health`, login/logout |
-| `app/models.py` | Parameterised SQL: list/search/filter/sort/paginate, CRUD, statistics, neighbours |
-| `app/validation.py` | Version (semantic) and field validation, normalisation, duplicate check |
-| `app/db.py` | Connections, schema, idempotent demo seeding, reset |
-| `app/auth.py` | Management modes, sign-in, CSRF, redirect safety, login throttle |
-| `app/cli.py` | `init-db`, `seed-demo`, `reset-demo`, `backup-db`, `hash-password` |
-| `app/buildinfo.py` | Commit/build identifier from `BUILD_INFO` or Git |
-| `templates/`, `static/` | Jinja pages and a CSS design system with variables; minimal progressive-enhancement JS |
+| `app/__init__.py` | Application factory, startup initialization, error handling, and security headers |
+| `app/routes.py` | Dashboard, release history, CRUD routes, About page, health endpoint, and authentication routes |
+| `app/models.py` | Database operations, release queries, filtering, sorting, pagination, and statistics |
+| `app/validation.py` | Input normalization, version validation, field validation, and duplicate-version checks |
+| `app/db.py` | Database connections, schema initialization, seeding, and reset operations |
+| `app/auth.py` | Authentication, CSRF handling, redirect validation, and login throttling |
+| `app/cli.py` | Flask command-line operations for database management and password hashing |
+| `app/buildinfo.py` | Build identifier handling |
+| Templates and static assets | HTML templates, styling, and browser-side enhancements |
 
-# 11. Database Design
-Single table `releases`.
+## 10. Database Design
 
-| Column | Type | Notes |
-|---|---|---|
-| id | INTEGER PK AUTOINCREMENT | |
-| version | TEXT NOT NULL **UNIQUE** | semantic version without "v"; prevents duplicates even under races |
-| title | TEXT NOT NULL | 3-120 chars |
-| description | TEXT NOT NULL | 10-1000 chars; added to existing databases with a non-destructive migration |
-| release_date | TEXT NOT NULL | ISO date |
-| status | TEXT NOT NULL | Draft, Scheduled, Released, Rolled Back, Deprecated |
-| category | TEXT NOT NULL | Major, Minor, Patch, Hotfix, Security |
-| features / bug_fixes / improvements | TEXT | one item per line |
-| deployment_notes | TEXT | |
-| author | TEXT NOT NULL | |
-| created_at / updated_at | TEXT NOT NULL | UTC |
+ReleaseNote uses SQLite to store release information.
 
-Indexes on `(release_date DESC, id DESC)` and `status`. WAL journal mode permits two Gunicorn workers.
+The `releases` table contains fields for the release identifier, version, title, description, release date, status, category, features, bug fixes, improvements, deployment notes, author, and creation and update timestamps.
 
-Fresh databases are populated with 25 releases from v1.6.0 through v2.5.0. Startup seeding uses `INSERT OR IGNORE`: existing versions and user-created records are preserved, and subsequent starts do not create duplicates.
+The version field is unique to prevent duplicate release versions. The application validates input before saving records and uses parameterized SQL for database operations.
 
-# 12. Terraform Implementation
-Files `versions.tf`, `providers.tf`, `variables.tf`, `main.tf`, `outputs.tf`, `cloud-init.yaml`, `terraform.tfvars.example`. Variables cover region, names, VM size, admin user, key path, SSH CIDRs, networking, disk, HTTPS toggle, tags; validations reject `0.0.0.0/0` for SSH and missing key files. Resources carry tags; dependencies are expressed through resource references. Procedure, authentication and state handling are in `docs/TERRAFORM.md`.
+A fresh database is designed to receive 25 demonstration releases spanning versions v1.6.0 through v2.5.0. The seeding process is intended to be repeatable and preserve existing release records.
 
-# 13. Azure Infrastructure Configuration
-Resource group `rg-releasenote-dev`; VNet `10.20.0.0/16`; subnet `10.20.1.0/24`; NSG allowing 22 (only from listed CIDRs), 80 (Internet), 443 only if enabled; Standard static public IP; NIC; Ubuntu Server 22.04 LTS Gen2 VM with SSH-key-only login. Jenkins (8080) is not exposed. [Record the actual region, VM size and IP you used.]
+## 11. GitHub Actions Implementation
 
-# 14. Jenkins Pipeline Design
-Declarative pipeline: Checkout; Verify Environment; Automated Tests (JUnit published); Validate Build; Package (archived, checksummed); Deploy to Azure VM (SSH key and host from Jenkins Credentials, single-quoted shell to avoid secret interpolation, `timeout`, `BatchMode`); Verify Deployment (public `/health`, must show `status: ok` and the commit just built); `post` reporting. Options: timestamps, 30-minute timeout, no concurrent builds, log rotation.
+The workflow is stored at:
 
-# 15. GitHub Integration and Trigger Configuration
-Two supported triggers: GitHub webhook to `/github-webhook/`, or Poll SCM every 2 minutes. Configuration and tests in `docs/JENKINS.md` sections 6-7. [State which one you actually configured and tested.]
+`.github/workflows/python-tests.yml`
 
-# 16. Deployment Workflow
-`deploy.sh` (9 steps): prerequisites; service user and directories; env file (created once); install release + per-release virtualenv; schema init as service user; database backup; systemd + Nginx config; atomic symlink switch + restart + health wait (rollback on failure); prune to last 5 releases. Persistent data in `/var/lib/releasenote`, secrets in `/etc/releasenote`.
+It is configured to run on pushes to `main`, pull requests targeting `main`, and manual execution.
 
-# 17. Automated Testing Strategy
-62 Pytest tests in five files with a fresh temporary database per test: start-up and schema, dashboard, health (including failure and secret-leak checks), seeding idempotency, full CRUD, 404s, validation (parameterised invalid inputs, duplicates), search/filter/sort/pagination, and security (CSRF, auth, throttle, open-redirect, XSS escaping, SQL-injection inertness, headers, request size, read-only production mode). The pipeline only reaches deployment if all pass. [Add coverage figures only if you measure them, e.g. `pip install pytest-cov` and `pytest --cov=app`.]
+The workflow performs the following steps:
 
-# 18. Security Considerations
-Authentication for writes; read-only default in production; CSRF; parameterised SQL; auto-escaped templates; CSP and other headers; SSH-key-only VM, SSH restricted by CIDR; secrets only in Jenkins Credentials and a root-owned env file; service runs as an unprivileged account with a hardened systemd unit; Terraform state excluded from Git. Known gaps: HTTP not HTTPS, single shared password, per-worker in-memory throttle, trust-on-first-use SSH host key, admin account with passwordless sudo.
+1. Checks out the repository.
+2. Sets up Python 3.12.
+3. Installs development dependencies from `requirements-dev.txt`.
+4. Runs the Pytest suite.
+5. Produces a JUnit XML report.
+6. Uploads the report as a workflow artifact.
 
-# 19. Execution and Verification Instructions
-Follow `README.md` sections 1-6 in order. Verification checklist: tests pass locally; `terraform validate` succeeds; `terraform apply` completes; Jenkins build is green; `/health` returns ok with the expected commit; a new commit triggers a build and changes the `build` value; a deliberately failing test stops the pipeline.
+### Verified Test Results
 
-# 20. Observations and Actual Results
-*Fill from your own runs. Do not enter values you did not observe.*
+| Metric | Verified result |
+|---|---:|
+| Tests executed | 78 |
+| Failures | 0 |
+| Errors | 0 |
+| Skipped | 0 |
+| Workflow outcome | Success |
 
-| Item | Observed |
+The report is uploaded as the `releasenote-test-report` artifact, with a configured retention period of 14 days.
+
+**Workflow run:** https://github.com/azcruze/releasenote-devops/actions/runs/40289024445
+
+These results refer to the verified workflow run and should not be treated as a guarantee that every future code revision will pass.
+
+## 12. Jenkins Pipeline Implementation
+
+The Jenkins job is named `ReleaseNote-CI`.
+
+The verified pipeline uses a declarative Jenkinsfile and performs the following stages:
+
+1. **Checkout:** Retrieves the source code from the GitHub `main` branch.
+2. **Verify Environment:** Checks the availability and versions of Git, Bash, and tar.
+3. **Validate Project Files:** Verifies that required files and directories exist.
+4. **Package Source:** Creates a compressed source archive from the checked-out commit.
+5. **Generate Checksum:** Calculates the SHA-256 checksum of the archive.
+6. **Archive Artifacts:** Saves the generated files as Jenkins build artifacts.
+
+The successful build produced:
+
+- `releasenote-source.tar.gz`
+- `SHA256SUMS`
+
+The archive contains a source snapshot, while the checksum provides a means of checking the archive's integrity.
+
+**Important implementation boundary:** The verified Jenkins pipeline performs source validation and packaging. It does not currently establish that the 78 Python tests were run within Jenkins, that a deployment was executed, or that a remote health endpoint was verified.
+
+## 13. Terraform and Azure Infrastructure Design
+
+The repository contains Terraform configuration intended to provision a Linux virtual machine and associated Azure networking resources.
+
+The planned configuration includes a resource group, virtual network, subnet, network security group, public IP address, network interface, and Ubuntu virtual machine.
+
+The intended security design restricts SSH access to configured source IP ranges and avoids exposing the Jenkins port through the application's VM security rules.
+
+Terraform validation, planning, and resource creation must be executed against an appropriately configured Azure subscription. The presence of Terraform configuration files alone does not prove that the infrastructure was created.
+
+**Current status:** Azure resource provisioning has not been verified as completed.
+
+## 14. Planned Deployment Design
+
+The intended deployment uses Nginx as the web server, Gunicorn as the Flask application server, systemd for service management, and SQLite for data storage.
+
+The planned deployment script is designed to install application releases, preserve persistent application data, restart the service, verify application health, and roll back if a deployment check fails.
+
+These are design objectives. The remote deployment, automatic rollback, and live health-check behavior must be executed and observed before being reported as verified results.
+
+## 15. Security Considerations
+
+The project includes security-related application controls such as input validation, parameterized SQL, CSRF protection, template auto-escaping, authentication for management operations, and security headers.
+
+Additional deployment considerations include:
+
+- Keeping secrets and private keys out of the Git repository.
+- Restricting SSH access to approved source IP addresses.
+- Storing deployment credentials securely.
+- Configuring an administrator password hash before enabling public management operations.
+- Using HTTPS for production deployment.
+- Protecting Terraform state and other files containing sensitive infrastructure information.
+
+The intended deployment architecture has limitations, including single-server availability, a shared management password, and HTTP-only access unless TLS is configured. These limitations should be addressed before production use.
+
+## 16. Execution and Verification
+
+The following results have been verified:
+
+1. The GitHub Actions workflow completed successfully.
+2. The verified workflow run executed 78 tests with zero failures and zero errors.
+3. The workflow uploaded a JUnit XML report artifact.
+4. The Jenkins `ReleaseNote-CI` pipeline completed successfully.
+5. Jenkins validated the required project files.
+6. Jenkins generated the source archive and SHA-256 checksum.
+
+The following activities remain unverified:
+
+- Successful execution of the test suite inside Jenkins.
+- Terraform validation and resource provisioning in Azure.
+- Remote application deployment.
+- Automatic rollback following a failed deployment.
+- Live health endpoint verification.
+- End-to-end deployment triggered by a GitHub change.
+
+These activities should be updated in the report only after execution evidence is available.
+
+## 17. Observations and Actual Results
+
+| Item | Observed result |
 |---|---|
-| Local test run | [paste your actual test output] |
-| `terraform validate` | [paste result] |
-| `terraform plan` summary | [Plan: N to add...] |
-| Resources created in Azure | [list from portal] |
-| Public IP / URL | [value] |
-| First Jenkins build result and duration | [value] |
-| Trigger used and time from push to build start | [value] |
-| `/health` response after deployment | [paste] |
-| Failed-test experiment outcome | [value] |
-| Deployed commit vs `/health` build | [match? value] |
+| GitHub repository | Available |
+| GitHub Actions workflow | Successful |
+| Automated tests | 78 |
+| Test failures | 0 |
+| Test errors | 0 |
+| JUnit XML artifact | Uploaded successfully |
+| Jenkins pipeline | Successful |
+| Required project-file validation | Passed |
+| Source archive | Generated |
+| SHA-256 checksum | Generated |
+| Jenkins execution of Python tests | Not verified |
+| Terraform Azure provisioning | Not verified |
+| Remote deployment | Not verified |
+| Live health verification | Not verified |
 
-# 21. Limitations
-Single VM and no high availability; SQLite is single-writer and tied to the VM disk (destroying the VM destroys data; backups are on the same disk); no migration tooling, so rollback does not revert schema; HTTP only; Jenkins must be able to reach the VM by SSH and, for webhooks, be reachable by GitHub; short-lived demo cost model.
+The verified results demonstrate automated test execution and source packaging. They do not demonstrate a completed cloud deployment.
 
-# 22. Future Enhancements
-TLS with Let's Encrypt and a DNS name; Azure Database or managed backups; Alembic-style migrations; role-based users; Markdown/RSS export of release notes; remote Terraform state in Azure Storage; blue/green deployment with a second VM; Jenkins agent in Azure; container image build.
+## 18. Limitations
 
-# 23. Conclusion
-The project delivers a complete, reproducible path from a Git commit to a verified Azure deployment, with tests as a gate, infrastructure defined as code, and rollback and health verification built in. [Add one or two sentences on what you learned from running it.]
+The project currently has the following limitations:
 
-# 24. References
-1. Flask documentation - <https://flask.palletsprojects.com/>
-2. Gunicorn documentation - <https://docs.gunicorn.org/>
-3. Nginx documentation - <https://nginx.org/en/docs/>
-4. pytest documentation - <https://docs.pytest.org/>
-5. Terraform documentation - <https://developer.hashicorp.com/terraform/docs>
-6. Terraform AzureRM provider - <https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs>
-7. Jenkins documentation - <https://www.jenkins.io/doc/>
-8. Azure Virtual Machines documentation - <https://learn.microsoft.com/azure/virtual-machines/>
-9. Semantic Versioning 2.0.0 - <https://semver.org/>
-10. SQLite Write-Ahead Logging - <https://www.sqlite.org/wal.html>
+- The Azure deployment has not been verified.
+- The GitHub Actions and Jenkins workflows are separate.
+- The verified Jenkins pipeline does not execute the Python test suite.
+- Remote deployment and health verification remain unconfirmed.
+- The intended infrastructure uses a single VM rather than a highly available architecture.
+- SQLite is appropriate for a small application but may not suit a high-concurrency production system.
+- HTTPS and automated TLS certificate management require additional configuration.
+- Deployment rollback and production recovery need practical verification.
 
-# Appendix A: Screenshots
-See `docs/SCREENSHOTS.md`; insert Figures 1-16 here with captions. *Items missing at submission time must be captured, not substituted.*
+## 19. Future Enhancements
+
+Potential improvements include:
+
+1. Integrating automated testing and deployment through a unified CI/CD pipeline.
+2. Running Pytest inside Jenkins and publishing JUnit results there.
+3. Connecting Jenkins to GitHub through a tested webhook or polling configuration.
+4. Provisioning Azure infrastructure using Terraform.
+5. Deploying the application to a real Azure VM.
+6. Verifying live application health after deployment.
+7. Testing rollback using a controlled deployment failure.
+8. Configuring HTTPS and a domain name.
+9. Adding automated backups and improved database recovery.
+10. Introducing role-based access control and more advanced release reporting.
+
+## 20. Conclusion
+
+ReleaseNote combines a software release-tracking application with automated testing and source packaging workflows. The verified GitHub Actions run executed 78 automated tests with zero failures and zero errors, while Jenkins successfully validated the repository structure and generated a source archive with a SHA-256 checksum.
+
+The project also documents an intended infrastructure-as-code and cloud deployment path using Terraform and Microsoft Azure. Completing and verifying the cloud deployment would be the next major milestone. Maintaining a clear distinction between implemented functionality,
